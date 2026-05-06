@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Driver Tracker</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #1e1e2f;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .card {
+            background: #2a2a3b;
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 500px;
+            margin: 20px auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        h2 {
+            margin-top: 0;
+            color: #00c853;
+        }
+        #status {
+            background: #00000066;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.1em;
+            word-break: break-word;
+        }
+        .badge {
+            display: inline-block;
+            background: #ff5722;
+            border-radius: 30px;
+            padding: 5px 12px;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+        footer {
+            font-size: 0.8em;
+            margin-top: 30px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🚚 Driver Tracking</h2>
+        <div id="status">Starting GPS...</div>
+        <div class="badge" id="netStatus">Checking network...</div>
+    </div>
+    <footer>Live tracking active | Data syncs when online</footer>
+
+    <script type="module">
+        // ---------- FIREBASE ----------
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getDatabase, ref, set, get, push, update } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+        import localforage from "https://cdn.skypack.dev/localforage";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyABCAAh8pr_UEy5y1dXsUlmB_VZFv1loFI",
+            authDomain: "delivery-tracking-8a23d.firebaseapp.com",
+            databaseURL: "https://delivery-tracking-8a23d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "delivery-tracking-8a23d",
+            storageBucket: "delivery-tracking-8a23d.firebasestorage.app",
+            messagingSenderId: "466542316831",
+            appId: "1:466542316831:web:c8922c1fbf92db23fe342a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const DRIVER_ID = "driver1";
+
+        // ---------- OFFLINE QUEUE ----------
+        let syncQueue = [];
+        let isOnline = navigator.onLine;
+
+        // ---------- STOP DETECTION ----------
+        let lastPosition = null;
+        let stopStartTime = null;
+        const STOP_METERS = 15;
+        const STOP_SECONDS = 60;
+
+        // ---------- THROTTLE ----------
+        let lastPush = 0;
+        const MIN_TIME_MS = 5000;
+
+        // Helper: distance in meters
+        function distance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Save to Firebase (live + route)
+        async function pushToFirebase(loc) {
+            const liveRef = ref(db, `drivers/${DRIVER_ID}/live`);
+            await set(liveRef, {
+                latitude: loc.lat,
+                longitude: loc.lng,
+                time: loc.readableTime,
+                timestamp: loc.timestamp
+            });
+
+            const routeRef = ref(db, `drivers/${DRIVER_ID}/route`);
+            const snap = await get(routeRef);
+            let route = snap.val() || [];
+            route.push({ lat: loc.lat, lng: loc.lng, time: loc.readableTime, timestamp: loc.timestamp });
+            if (route.length > 2000) route = route.slice(-2000);
+            await set(routeRef, route);
+        }
+
+        async function pushStopEvent(stop) {
+            const stopsRef = ref(db, `drivers/${DRIVER_ID}/stops`);
+            const snap = await get(stopsRef);
+            let stops = snap.val() || [];
+            stops.push(stop);
+            if (stops.length > 500) stops = stops.slice(-500);
+            await set(stopsRef, stops);
+        }
+
+        // Queue management
+        async function queueForSync(data, type = "location") {
+            syncQueue.push({ type, data, ts: Date.now() });
+            await localforage.setItem("syncQueue", syncQueue);
+            if (isOnline) processSyncQueue();
+        }
+
+        async function processSyncQueue() {
+            if (!isOnline || syncQueue.length === 0) return;
+            let ok = [];
+            for (let i = 0; i < syncQueue.length; i++) {
+                try {
+                    if (syncQueue[i].type === "location") await pushToFirebase(syncQueue[i].data);
+                    else if (syncQueue[i].type === "stop") await pushStopEvent(syncQueue[i].data);
+                    ok.push(i);
+                } catch(e) { break; }
+            }
+            for (let i = ok.length-1; i >= 0; i--) syncQueue.splice(ok[i], 1);
+            await localforage.setItem("syncQueue", syncQueue);
+            if (syncQueue.length) setTimeout(processSyncQueue, 5000);
+        }
+
+        // Load queue on start
+        async function loadQueue() {
+            const stored = await localforage.getItem("syncQueue");
+            if (stored) syncQueue.push(...stored);
+            processSyncQueue();
+        }
+
+        // Core GPS handler
+        async function saveLocation(pos) {
+            const now = Date.now();
+            const loc = {
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                timestamp: now,
+                readableTime: new Date().toLocaleString("en-NG", { timeZone: "Africa/Lagos" })
+            };
+
+            // Stoppage detection
+            if (lastPosition) {
+                const dist = distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng);
+                if (dist < STOP_METERS) {
+                    if (!stopStartTime) stopStartTime = now;
+                    else if (now - stopStartTime >= STOP_SECONDS * 1000) {
+                        await queueForSync({
+                            type: "stop",
+                            startTime: stopStartTime,
+                            endTime: null,
+                            location: { lat: lastPosition.lat, lng: lastPosition.lng },
+                            driver: DRIVER_ID
+                        }, "stop");
+                        stopStartTime = null;
+                    }
+                } else {
+                    if (stopStartTime) {
+                        await queueForSync({
+                            type: "stop",
+                            startTime: stopStartTime,
+                            endTime: now,
+                            location: { lat: lastPosition.lat, lng: lastPosition.lng },
+                            driver: DRIVER_ID
+                        }, "stop");
+                        stopStartTime = null;
+                    }
+                }
+            }
+            lastPosition = { lat: loc.lat, lng: loc.lng, timestamp: now };
+
+            // Throttled push or queue
+            if (isOnline && (now - lastPush) >= MIN_TIME_MS) {
+                await pushToFirebase(loc);
+                lastPush = now;
+            } else {
+                await queueForSync(loc, "location");
+            }
+
+            // Update UI
+            document.getElementById("status").innerHTML = `📍 ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)}<br>📦 Queue: ${syncQueue.length}`;
+            document.getElementById("netStatus").innerHTML = isOnline ? "✅ Online / Syncing" : "📡 Offline – storing locally";
+        }
+
+        // Start GPS
+        let watchId = null;
+        function startTracking() {
+            if (!navigator.geolocation) {
+                document.getElementById("status").innerHTML = "❌ GPS not supported";
+                return;
+            }
+            watchId = navigator.geolocation.watchPosition(saveLocation, (err) => {
+                document.getElementById("status").innerHTML = `⚠️ GPS error: ${err.message}`;
+            }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+        }
+
+        // Network listeners
+        window.addEventListener("online", () => { isOnline = true; processSyncQueue(); });
+        window.addEventListener("offline", () => { isOnline = false; });
+
+        // Keep screen awake
+        let wakeLock = null;
+        async function keepAwake() {
+            try {
+                wakeLock = await navigator.wakeLock.request("screen");
+                document.addEventListener("visibilitychange", async () => {
+                    if (!document.hidden && !wakeLock) wakeLock = await navigator.wakeLock.request("screen");
+                });
+            } catch(e) { console.warn("Wake lock not supported"); }
+        }
+
+        // Initialise
+        async function init() {
+            await loadQueue();
+            startTracking();
+            keepAwake();
+        }
+        init();
+    </script>
+</body>
+</html>
