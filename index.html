@@ -2,510 +2,353 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Driver Pro | Fleet Alert</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Driver Tracker</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Roboto', sans-serif;
-            background: radial-gradient(circle at 10% 20%, #0a0f1e, #03060c);
+            font-family: 'Courier New', monospace;
+            background: #000;
+            padding: 16px;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .card {
+            max-width: 500px;
+            width: 100%;
+            background: #111;
+            border: 1px solid #333;
             padding: 20px;
         }
-
-        .tracker-card {
-            max-width: 550px;
-            width: 100%;
-            background: rgba(10, 20, 35, 0.7);
-            backdrop-filter: blur(20px);
-            border-radius: 56px;
-            padding: 28px 24px 36px;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(0, 229, 255, 0.3), 0 0 20px rgba(0, 229, 255, 0.2);
-            transition: all 0.3s ease;
-            border: 1px solid rgba(0, 229, 255, 0.4);
-        }
-
         .header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 28px;
-            border-bottom: 1px solid rgba(0, 229, 255, 0.3);
-            padding-bottom: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
         }
-        .logo-icon {
-            font-size: 44px;
-            filter: drop-shadow(0 0 8px #00e5ff);
-            animation: float 2s ease-in-out infinite;
-        }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-4px); }
-            100% { transform: translateY(0px); }
-        }
-        .title h1 {
-            font-size: 1.9rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #ffffff, #00e5ff, #ff4081);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            letter-spacing: -0.5px;
-            text-shadow: 0 0 12px rgba(0,229,255,0.5);
-        }
-        .title p {
-            font-size: 0.75rem;
-            color: #aaccff;
-            letter-spacing: 1px;
-        }
-
-        .status-row {
+        .header h1 { font-size: 1.4rem; color: #fff; font-weight: normal; }
+        .header p { font-size: 0.7rem; color: #888; }
+        .status {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 8px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            background: rgba(0,0,0,0.5);
-            border-radius: 60px;
-            padding: 8px 20px;
-            margin-bottom: 28px;
-            border: 1px solid rgba(0, 229, 255, 0.5);
-            box-shadow: 0 0 8px rgba(0,229,255,0.2);
-        }
-        .network-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-        }
-        .online {
-            color: #00ffaa;
-            text-shadow: 0 0 5px #00ffaa;
-        }
-        .offline {
-            color: #ff5e5e;
-            text-shadow: 0 0 3px #ff5e5e;
-        }
-        .queue-badge {
-            background: #ff9800;
-            color: #1e1e2f;
-            padding: 4px 14px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            box-shadow: 0 0 6px #ff9800;
-        }
-
-        .live-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255, 64, 129, 0.15);
-            border: 1px solid #ff4081;
-            border-radius: 60px;
-            padding: 6px 18px;
+            margin-bottom: 20px;
             font-size: 0.8rem;
-            font-weight: 700;
-            color: #ff80ab;
-            margin-bottom: 24px;
-            box-shadow: 0 0 12px rgba(255,64,129,0.4);
+            color: #ccc;
         }
-        .pulse-ring {
-            width: 12px;
-            height: 12px;
-            background: #ff4081;
-            border-radius: 50%;
-            box-shadow: 0 0 0 0 #ff4081;
-            animation: pulse-ring 1.2s infinite;
+        .online { color: #0f0; }
+        .offline { color: #f00; }
+        .queue-badge {
+            background: #333;
+            color: #fff;
+            padding: 2px 8px;
         }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 0.6; box-shadow: 0 0 0 0 #ff4081; }
-            70% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 0 6px rgba(255,64,129,0); }
-            100% { transform: scale(0.8); opacity: 0.6; box-shadow: 0 0 0 0 rgba(255,64,129,0); }
+        .live {
+            border: 1px solid #333;
+            background: #1a1a1a;
+            padding: 4px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 0.7rem;
+            color: #ff0;
         }
-
-        .gps-panel {
-            background: rgba(0,0,0,0.5);
-            border-radius: 40px;
-            padding: 24px 20px;
-            margin-bottom: 28px;
+        .gps-box {
+            border: 1px solid #333;
+            padding: 16px;
             text-align: center;
-            border: 1px solid rgba(0, 229, 255, 0.3);
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 0 12px rgba(0,229,255,0.2);
+            margin-bottom: 20px;
+            background: #0a0a0a;
         }
-        .coordinates {
-            font-size: 1.5rem;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-            color: #bbf0ff;
-            text-shadow: 0 0 8px #00e5ff;
-            letter-spacing: 1px;
+        .coords {
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #0f0;
             word-break: break-word;
         }
-        .accuracy {
-            font-size: 0.8rem;
-            color: #8aadff;
-            margin-top: 12px;
+        .accuracy, .last-update {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 8px;
+        }
+        .stats {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
-        .last-update {
-            font-size: 0.75rem;
-            color: #88aaff;
-            margin-top: 12px;
-            font-family: monospace;
-        }
-
-        .stats-grid {
-            display: flex;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 28px;
-        }
-        .stat-card {
+        .stat {
             flex: 1;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 28px;
-            padding: 14px 8px;
+            border: 1px solid #333;
+            padding: 8px;
             text-align: center;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(0, 229, 255, 0.4);
-            transition: 0.2s;
-        }
-        .stat-card:hover {
-            border-color: #ff4081;
-            box-shadow: 0 0 12px rgba(255,64,129,0.3);
+            background: #0a0a0a;
         }
         .stat-value {
-            font-size: 1.7rem;
-            font-weight: 800;
-            color: #00e5ff;
-            text-shadow: 0 0 5px #00e5ff;
+            font-size: 1.3rem;
+            color: #0f0;
         }
         .stat-label {
-            font-size: 0.7rem;
-            color: #b8d0ff;
-            margin-top: 6px;
-            letter-spacing: 0.5px;
-        }
-
-        .footer {
             font-size: 0.65rem;
-            text-align: center;
-            color: #6c8dbb;
-            border-top: 1px solid rgba(0, 229, 255, 0.2);
-            padding-top: 18px;
+            color: #aaa;
         }
-
-        @media (max-width: 480px) {
-            .tracker-card { padding: 20px 18px 28px; }
-            .coordinates { font-size: 1.1rem; }
-            .stat-value { font-size: 1.3rem; }
-            .title h1 { font-size: 1.4rem; }
-            .logo-icon { font-size: 34px; }
+        .footer {
+            font-size: 0.6rem;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #333;
+            padding-top: 12px;
         }
     </style>
 </head>
 <body>
-    <div class="tracker-card">
-        <div class="header">
-            <div class="logo-icon">🚛</div>
-            <div class="title">
-                <h1>Driver Alert Pro</h1>
-                <p>Precision delivery companion</p>
-            </div>
+<div class="card">
+    <div class="header">
+        <h1>Driver Tracker</h1>
+        <p>basic version 1.0</p>
+    </div>
+    <div class="status">
+        <span>📡 <span id="netStatus">Connecting...</span></span>
+        <span id="queueBadge" class="queue-badge" style="display:none;"></span>
+    </div>
+    <div class="live">🔴 LIVE TRACKING</div>
+    <div class="gps-box">
+        <div class="coords" id="coords">⏳ waiting for GPS</div>
+        <div class="accuracy" id="accuracy"></div>
+        <div class="last-update" id="lastUpdate"></div>
+    </div>
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value" id="queueCount">0</div>
+            <div class="stat-label">offline points</div>
         </div>
-
-        <div class="status-row">
-            <div class="network-badge">
-                <span>📡</span> <span id="netStatusText">Connecting...</span>
-            </div>
-            <div id="queueBadge" class="queue-badge" style="display: none;">Queue: 0</div>
-        </div>
-
-        <div class="live-badge" id="liveBadge">
-            <div class="pulse-ring"></div> LIVE TRACKING
-        </div>
-
-        <div class="gps-panel">
-            <div class="coordinates" id="coordDisplay">⏳ Waiting for GPS</div>
-            <div class="accuracy" id="accuracyDisplay"></div>
-            <div class="last-update" id="lastUpdateDisplay">--:--:--</div>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-value" id="queueCountStat">0</div>
-                <div class="stat-label">📦 Offline points</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="syncStatusIcon">🟢</div>
-                <div class="stat-label">Sync status</div>
-            </div>
-        </div>
-
-        <div class="footer">
-            ⚡ GPS high accuracy | 💾 Offline queue | 🔋 Screen awake
+        <div class="stat">
+            <div class="stat-value" id="syncIcon">🟢</div>
+            <div class="stat-label">sync</div>
         </div>
     </div>
+    <div class="footer">offline queue | gps high accuracy</div>
+</div>
 
-    <script type="module">
-        // ---------- FIREBASE ----------
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
-        import localforage from "https://cdn.skypack.dev/localforage";
+<script type="module">
+    console.log("Version 1.0 – basic tracking");
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyABCAAh8pr_UEy5y1dXsUlmB_VZFv1loFI",
-            authDomain: "delivery-tracking-8a23d.firebaseapp.com",
-            databaseURL: "https://delivery-tracking-8a23d-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "delivery-tracking-8a23d",
-            storageBucket: "delivery-tracking-8a23d.firebasestorage.app",
-            messagingSenderId: "466542316831",
-            appId: "1:466542316831:web:c8922c1fbf92db23fe342a"
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+    import localforage from "https://cdn.skypack.dev/localforage";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyABCAAh8pr_UEy5y1dXsUlmB_VZFv1loFI",
+        authDomain: "delivery-tracking-8a23d.firebaseapp.com",
+        databaseURL: "https://delivery-tracking-8a23d-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "delivery-tracking-8a23d",
+        storageBucket: "delivery-tracking-8a23d.firebasestorage.app",
+        messagingSenderId: "466542316831",
+        appId: "1:466542316831:web:c8922c1fbf92db23fe342a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const DRIVER_ID = "driver1";   // change per vehicle
+
+    let syncQueue = [];
+    let isOnline = navigator.onLine;
+    let lastPosition = null;
+    let stopStartTime = null;
+    let lastPushTime = 0;
+    let watchId = null;
+    let trackingEnabled = true;
+
+    const STOP_MOVEMENT_METERS = 30;
+    const STOP_MIN_SECONDS = 120;
+    const MIN_TIME_MS = 5000;
+    const MIN_DISTANCE_METERS = 10;
+
+    function distance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    function updateUI(lat, lng, accuracy, timestamp, queueSize) {
+        if (lat && lng) document.getElementById("coords").innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        if (accuracy) document.getElementById("accuracy").innerHTML = `±${Math.round(accuracy)}m`;
+        if (timestamp) document.getElementById("lastUpdate").innerText = new Date(timestamp).toLocaleTimeString();
+        document.getElementById("queueCount").innerText = queueSize;
+        const qb = document.getElementById("queueBadge");
+        if (queueSize > 0) {
+            qb.style.display = "inline-block";
+            qb.innerText = `📦 ${queueSize}`;
+        } else {
+            qb.style.display = "none";
+        }
+        document.getElementById("syncIcon").innerHTML = isOnline ? "🟢" : "🔴";
+        document.getElementById("netStatus").innerHTML = isOnline ? "online" : "offline";
+        document.getElementById("netStatus").className = isOnline ? "online" : "offline";
+    }
+
+    async function pushLiveLocation(loc) {
+        await set(ref(db, `drivers/${DRIVER_ID}/live`), {
+            latitude: loc.lat, longitude: loc.lng,
+            time: loc.readableTime, timestamp: loc.timestamp, accuracy: loc.accuracy
+        });
+    }
+    async function appendToRoute(loc) {
+        const routeRef = ref(db, `drivers/${DRIVER_ID}/route`);
+        const snap = await get(routeRef);
+        let route = snap.val() || [];
+        route.push({ lat: loc.lat, lng: loc.lng, time: loc.readableTime, timestamp: loc.timestamp });
+        if (route.length > 2000) route = route.slice(-2000);
+        await set(routeRef, route);
+    }
+    async function pushStopEvent(stop) {
+        const stopsRef = ref(db, `drivers/${DRIVER_ID}/stops`);
+        const snap = await get(stopsRef);
+        let stops = snap.val() || [];
+        stops.push(stop);
+        if (stops.length > 500) stops = stops.slice(-500);
+        await set(stopsRef, stops);
+    }
+    async function queueForSync(data, type = "location") {
+        syncQueue.push({ type, data, ts: Date.now() });
+        await localforage.setItem("syncQueue", syncQueue);
+        updateUI(data.lat, data.lng, data.accuracy, data.timestamp, syncQueue.length);
+        if (isOnline) processSyncQueue();
+    }
+    async function processSyncQueue() {
+        if (!isOnline || syncQueue.length === 0) return;
+        let success = [];
+        for (let i = 0; i < syncQueue.length; i++) {
+            try {
+                if (syncQueue[i].type === "location") {
+                    await pushLiveLocation(syncQueue[i].data);
+                    await appendToRoute(syncQueue[i].data);
+                } else if (syncQueue[i].type === "stop") {
+                    await pushStopEvent(syncQueue[i].data);
+                }
+                success.push(i);
+            } catch(e) { break; }
+        }
+        for (let i = success.length-1; i >= 0; i--) syncQueue.splice(success[i], 1);
+        await localforage.setItem("syncQueue", syncQueue);
+        if (syncQueue.length > 0) setTimeout(processSyncQueue, 5000);
+        if (syncQueue.length === 0) updateUI(0,0,null,Date.now(),0);
+    }
+    async function loadQueue() {
+        const stored = await localforage.getItem("syncQueue");
+        if (stored) syncQueue.push(...stored);
+        processSyncQueue();
+    }
+
+    async function saveLocation(position) {
+        if (!trackingEnabled) return;
+        const now = Date.now();
+        const loc = {
+            lat: position.coords.latitude, lng: position.coords.longitude,
+            timestamp: now,
+            readableTime: new Date().toLocaleString("en-NG", {timeZone: "Africa/Lagos"}),
+            accuracy: position.coords.accuracy
         };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const DRIVER_ID = "driver1";   // CHANGE per vehicle
-
-        // ---------- STATE ----------
-        let syncQueue = [];
-        let isOnline = navigator.onLine;
-        let lastPosition = null;
-        let stopStartTime = null;
-        let lastPushTime = 0;
-
-        // UPDATED: More robust stop detection (less sensitive)
-        const STOP_MOVEMENT_METERS = 25;   // must move more than 25m to break a stop
-        const STOP_MIN_SECONDS = 120;       // require 2 minutes stationary to count as stop
-        const MIN_TIME_MS = 5000;
-        const MIN_DISTANCE_METERS = 10;
-
-        function distance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3;
-            const φ1 = lat1 * Math.PI/180;
-            const φ2 = lat2 * Math.PI/180;
-            const Δφ = (lat2-lat1) * Math.PI/180;
-            const Δλ = (lon2-lon1) * Math.PI/180;
-            const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
-
-        // UI updates
-        function updateUI(lat, lng, accuracy, timestamp, queueSize) {
-            if (lat && lng) {
-                document.getElementById("coordDisplay").innerHTML = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            } else {
-                document.getElementById("coordDisplay").innerHTML = "📍 Acquiring signal...";
-            }
-            if (accuracy) document.getElementById("accuracyDisplay").innerHTML = `🎯 Accuracy: ±${Math.round(accuracy)}m`;
-            if (timestamp) {
-                const date = new Date(timestamp);
-                document.getElementById("lastUpdateDisplay").innerHTML = date.toLocaleTimeString();
-            }
-            document.getElementById("queueCountStat").innerText = queueSize;
-            const queueBadge = document.getElementById("queueBadge");
-            if (queueSize > 0) {
-                queueBadge.style.display = "inline-block";
-                queueBadge.innerText = `Queue: ${queueSize}`;
-            } else {
-                queueBadge.style.display = "none";
-            }
-            document.getElementById("syncStatusIcon").innerHTML = isOnline ? "🟢 Online" : "🔴 Offline";
-            const netText = document.getElementById("netStatusText");
-            netText.innerText = isOnline ? "Online • Syncing" : "Offline • Storing";
-            netText.className = isOnline ? "online" : "offline";
-        }
-
-        // Firebase operations
-        async function pushLiveLocation(loc) {
-            const liveRef = ref(db, `drivers/${DRIVER_ID}/live`);
-            await set(liveRef, {
-                latitude: loc.lat,
-                longitude: loc.lng,
-                time: loc.readableTime,
-                timestamp: loc.timestamp,
-                accuracy: loc.accuracy
-            });
-        }
-
-        async function appendToRoute(loc) {
-            const routeRef = ref(db, `drivers/${DRIVER_ID}/route`);
-            const snap = await get(routeRef);
-            let route = snap.val() || [];
-            route.push({
-                lat: loc.lat,
-                lng: loc.lng,
-                time: loc.readableTime,
-                timestamp: loc.timestamp,
-                accuracy: loc.accuracy
-            });
-            if (route.length > 2000) route = route.slice(-2000);
-            await set(routeRef, route);
-        }
-
-        async function pushStopEvent(stop) {
-            const stopsRef = ref(db, `drivers/${DRIVER_ID}/stops`);
-            const snap = await get(stopsRef);
-            let stops = snap.val() || [];
-            stops.push(stop);
-            if (stops.length > 500) stops = stops.slice(-500);
-            await set(stopsRef, stops);
-        }
-
-        async function queueForSync(data, type = "location") {
-            syncQueue.push({ type, data, ts: Date.now() });
-            await localforage.setItem("syncQueue", syncQueue);
-            updateUI(data.lat, data.lng, data.accuracy, data.timestamp, syncQueue.length);
-            if (isOnline) processSyncQueue();
-        }
-
-        async function processSyncQueue() {
-            if (!isOnline || syncQueue.length === 0) return;
-            let success = [];
-            for (let i = 0; i < syncQueue.length; i++) {
-                try {
-                    if (syncQueue[i].type === "location") {
-                        await pushLiveLocation(syncQueue[i].data);
-                        await appendToRoute(syncQueue[i].data);
-                    } else if (syncQueue[i].type === "stop") {
-                        await pushStopEvent(syncQueue[i].data);
-                    }
-                    success.push(i);
-                } catch(e) { break; }
-            }
-            for (let i = success.length-1; i >= 0; i--) syncQueue.splice(success[i], 1);
-            await localforage.setItem("syncQueue", syncQueue);
-            if (syncQueue.length > 0) setTimeout(processSyncQueue, 5000);
-            if (syncQueue.length === 0) updateUI(0,0,null,Date.now(),0);
-        }
-
-        async function loadQueue() {
-            const stored = await localforage.getItem("syncQueue");
-            if (stored) syncQueue.push(...stored);
-            processSyncQueue();
-        }
-
-        // GPS handler
-        async function saveLocation(position) {
-            const now = Date.now();
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const accuracy = position.coords.accuracy;
-            const loc = {
-                lat, lng,
-                timestamp: now,
-                readableTime: new Date().toLocaleString("en-NG", { timeZone: "Africa/Lagos" }),
-                accuracy
-            };
-
-            // Movement filter (skip tiny drifts)
-            if (lastPosition && distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng) < MIN_DISTANCE_METERS) {
-                if (isOnline && (now - lastPushTime) >= MIN_TIME_MS) {
-                    await pushLiveLocation(loc);
-                    lastPushTime = now;
-                } else if (!isOnline) {
-                    await queueForSync(loc, "location");
-                }
-                updateUI(lat, lng, accuracy, now, syncQueue.length);
-                return;
-            }
-
-            // STOP DETECTION (only when movement < STOP_MOVEMENT_METERS for > STOP_MIN_SECONDS)
-            if (lastPosition) {
-                const dist = distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng);
-                if (dist < STOP_MOVEMENT_METERS) {
-                    // Not moving enough – possible stop
-                    if (!stopStartTime) {
-                        stopStartTime = now;  // start timer
-                    } else if (now - stopStartTime >= STOP_MIN_SECONDS * 1000) {
-                        // Verified stop longer than required
-                        const stopEvent = {
-                            startTime: stopStartTime,
-                            endTime: null,
-                            location: { lat: lastPosition.lat, lng: lastPosition.lng },
-                            driver: DRIVER_ID
-                        };
-                        await queueForSync(stopEvent, "stop");
-                        stopStartTime = null;  // prevent duplicate events
-                    }
-                } else {
-                    // Movement detected – close any ongoing stop
-                    if (stopStartTime) {
-                        const stopEvent = {
-                            startTime: stopStartTime,
-                            endTime: now,
-                            location: { lat: lastPosition.lat, lng: lastPosition.lng },
-                            driver: DRIVER_ID
-                        };
-                        await queueForSync(stopEvent, "stop");
-                        stopStartTime = null;
-                    }
-                }
-            }
-            lastPosition = { lat: loc.lat, lng: loc.lng, timestamp: now };
-
-            // Push live location and route (throttled)
+        if (lastPosition && distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng) < MIN_DISTANCE_METERS) {
             if (isOnline && (now - lastPushTime) >= MIN_TIME_MS) {
                 await pushLiveLocation(loc);
-                await appendToRoute(loc);
                 lastPushTime = now;
+            } else if (!isOnline) await queueForSync(loc, "location");
+            updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
+            return;
+        }
+        // stop detection
+        if (lastPosition) {
+            const dist = distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng);
+            if (dist < STOP_MOVEMENT_METERS) {
+                if (!stopStartTime) stopStartTime = now;
+                else if (now - stopStartTime >= STOP_MIN_SECONDS * 1000) {
+                    await queueForSync({
+                        startTime: stopStartTime, endTime: null,
+                        location: { lat: lastPosition.lat, lng: lastPosition.lng },
+                        driver: DRIVER_ID
+                    }, "stop");
+                    stopStartTime = null;
+                }
             } else {
-                await queueForSync(loc, "location");
+                if (stopStartTime) {
+                    await queueForSync({
+                        startTime: stopStartTime, endTime: now,
+                        location: { lat: lastPosition.lat, lng: lastPosition.lng },
+                        driver: DRIVER_ID
+                    }, "stop");
+                    stopStartTime = null;
+                }
             }
-            updateUI(lat, lng, accuracy, now, syncQueue.length);
         }
-
-        function gpsError(error) {
-            document.getElementById("coordDisplay").innerHTML = `⚠️ GPS error: ${error.message}`;
-            document.getElementById("accuracyDisplay").innerHTML = "Check location permissions & ensure HTTPS";
+        lastPosition = { lat: loc.lat, lng: loc.lng, timestamp: now };
+        if (isOnline && (now - lastPushTime) >= MIN_TIME_MS) {
+            await pushLiveLocation(loc);
+            await appendToRoute(loc);
+            lastPushTime = now;
+        } else {
+            await queueForSync(loc, "location");
         }
+        updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
+    }
 
-        // Start tracking
-        let watchId = null;
-        function startTracking() {
-            if (!navigator.geolocation) {
-                document.getElementById("coordDisplay").innerHTML = "❌ GPS not supported";
-                return;
-            }
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-            watchId = navigator.geolocation.watchPosition(
-                saveLocation,
-                gpsError,
-                { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-            );
-        }
+    function gpsError(err) {
+        document.getElementById("coords").innerHTML = `⚠️ error: ${err.message}`;
+        document.getElementById("accuracy").innerHTML = "check permissions & https";
+    }
 
-        window.addEventListener("online", () => { isOnline = true; processSyncQueue(); });
-        window.addEventListener("offline", () => { isOnline = false; });
+    function startTracking() {
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+        watchId = navigator.geolocation.watchPosition(saveLocation, gpsError, {
+            enableHighAccuracy: true, maximumAge: 0, timeout: 10000
+        });
+    }
+    function stopTracking() {
+        if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    }
 
-        let wakeLock = null;
-        async function keepAwake() {
-            try {
-                wakeLock = await navigator.wakeLock.request("screen");
-                document.addEventListener("visibilitychange", async () => {
-                    if (!document.hidden && !wakeLock) wakeLock = await navigator.wakeLock.request("screen");
-                });
-            } catch(e) { console.warn("Wake lock not supported"); }
-        }
-
-        async function init() {
-            await loadQueue();
+    const controlRef = ref(db, `drivers/${DRIVER_ID}/controls/tracking_enabled`);
+    onValue(controlRef, (snap) => {
+        const enabled = snap.val();
+        if (enabled === false) {
+            trackingEnabled = false;
+            stopTracking();
+            document.getElementById("coords").innerHTML = "⏸ paused by manager";
+        } else if (enabled === true) {
+            trackingEnabled = true;
             startTracking();
-            keepAwake();
+        } else {
+            trackingEnabled = true;
+            startTracking();
         }
-        init();
-    </script>
+    });
+
+    window.addEventListener("online", () => { isOnline = true; processSyncQueue(); });
+    window.addEventListener("offline", () => { isOnline = false; });
+
+    let wakeLock = null;
+    async function keepAwake() {
+        try {
+            wakeLock = await navigator.wakeLock.request("screen");
+            document.addEventListener("visibilitychange", async () => {
+                if (!document.hidden && !wakeLock) wakeLock = await navigator.wakeLock.request("screen");
+            });
+        } catch(e) {}
+    }
+
+    (async () => {
+        await loadQueue();
+        const init = await get(controlRef);
+        if (init.val() === null) await set(controlRef, true);
+        keepAwake();
+    })();
+</script>
 </body>
 </html>
