@@ -256,19 +256,12 @@
             readableTime: new Date().toLocaleString("en-NG", {timeZone: "Africa/Lagos"}),
             accuracy: position.coords.accuracy
         };
-        if (lastPosition && distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng) < MIN_DISTANCE_METERS) {
-            if (isOnline && (now - lastPushTime) >= MIN_TIME_MS) {
-                await pushLiveLocation(loc);
-                lastPushTime = now;
-            } else if (!isOnline) await queueForSync(loc, "location");
-            updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
-            return;
-        }
-        // stop detection
         if (lastPosition) {
             const dist = distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng);
+
+            // Stop detection — runs BEFORE the early return so stationary GPS pings count
             if (dist < STOP_MOVEMENT_METERS) {
-                if (!stopStartTime) stopStartTime = now;
+                if (!stopStartTime) stopStartTime = now;   // start stop timer
                 else if (now - stopStartTime >= STOP_MIN_SECONDS * 1000) {
                     await queueForSync({
                         startTime: stopStartTime, endTime: null,
@@ -278,6 +271,7 @@
                     stopStartTime = null;
                 }
             } else {
+                // Driver moved — close any open stop
                 if (stopStartTime) {
                     await queueForSync({
                         startTime: stopStartTime, endTime: now,
@@ -286,6 +280,16 @@
                     }, "stop");
                     stopStartTime = null;
                 }
+            }
+
+            // Early return if barely moved — no need to update route
+            if (dist < MIN_DISTANCE_METERS) {
+                if (isOnline && (now - lastPushTime) >= MIN_TIME_MS) {
+                    await pushLiveLocation(loc);
+                    lastPushTime = now;
+                } else if (!isOnline) await queueForSync(loc, "location");
+                updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
+                return;
             }
         }
         lastPosition = { lat: loc.lat, lng: loc.lng, timestamp: now };
