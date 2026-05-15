@@ -161,7 +161,9 @@
     let watchId = null;
     let trackingEnabled = true;
 
-    const STOP_MOVEMENT_METERS = 30;
+    // Dynamic stop threshold — uses GPS accuracy so poor signal doesn't fake movement
+    // Base is 60m; expands if GPS accuracy is worse than that
+    const STOP_MOVEMENT_METERS = 60;
     const STOP_MIN_SECONDS = 120;
     const MIN_TIME_MS = 5000;
     const MIN_DISTANCE_METERS = 10;
@@ -259,8 +261,10 @@
         if (lastPosition) {
             const dist = distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng);
 
-            // Stop detection — runs BEFORE the early return so stationary GPS pings count
-            if (dist < STOP_MOVEMENT_METERS) {
+            // Stop detection — threshold adapts to GPS accuracy
+            // If phone accuracy is ±80m, a "stationary" reading can be 80m off
+            const stopThreshold = Math.max(STOP_MOVEMENT_METERS, loc.accuracy * 1.5);
+            if (dist < stopThreshold) {
                 if (!stopStartTime) stopStartTime = now;   // start stop timer
                 else if (now - stopStartTime >= STOP_MIN_SECONDS * 1000) {
                     await queueForSync({
