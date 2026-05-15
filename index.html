@@ -304,14 +304,34 @@
         document.getElementById("accuracy").innerHTML = "check permissions & https";
     }
 
+    let stopCheckId = null;
+
     function startTracking() {
         if (watchId) navigator.geolocation.clearWatch(watchId);
         watchId = navigator.geolocation.watchPosition(saveLocation, gpsError, {
             enableHighAccuracy: true, maximumAge: 0, timeout: 10000
         });
+
+        // Independent stop checker — runs every 15s regardless of GPS update frequency
+        // Fixes the bug where stationary phones reduce GPS event frequency
+        if (stopCheckId) clearInterval(stopCheckId);
+        stopCheckId = setInterval(async () => {
+            if (!trackingEnabled || !lastPosition || !stopStartTime) return;
+            const now = Date.now();
+            if (now - stopStartTime >= STOP_MIN_SECONDS * 1000) {
+                await queueForSync({
+                    startTime: stopStartTime, endTime: null,
+                    location: { lat: lastPosition.lat, lng: lastPosition.lng },
+                    driver: DRIVER_ID
+                }, "stop");
+                stopStartTime = null;
+            }
+        }, 15000);
     }
+
     function stopTracking() {
         if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+        if (stopCheckId) { clearInterval(stopCheckId); stopCheckId = null; }
     }
 
     const controlRef = ref(db, `drivers/${DRIVER_ID}/controls/tracking_enabled`);
