@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Driver Tracker</title>
+    <title>Fleet</title>
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Fleet">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -161,9 +169,7 @@
     let watchId = null;
     let trackingEnabled = true;
 
-    // Dynamic stop threshold — uses GPS accuracy so poor signal doesn't fake movement
-    // Base is 60m; expands if GPS accuracy is worse than that
-    const STOP_MOVEMENT_METERS = 60;
+    const STOP_MOVEMENT_METERS = 30;
     const STOP_MIN_SECONDS = 120;
     const MIN_TIME_MS = 5000;
     const MIN_DISTANCE_METERS = 10;
@@ -258,14 +264,19 @@
             readableTime: new Date().toLocaleString("en-NG", {timeZone: "Africa/Lagos"}),
             accuracy: position.coords.accuracy
         };
+        if (lastPosition && distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng) < MIN_DISTANCE_METERS) {
+            if (isOnline && (now - lastPushTime) >= MIN_TIME_MS) {
+                await pushLiveLocation(loc);
+                lastPushTime = now;
+            } else if (!isOnline) await queueForSync(loc, "location");
+            updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
+            return;
+        }
+        // stop detection
         if (lastPosition) {
             const dist = distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng);
-
-            // Stop detection — threshold adapts to GPS accuracy
-            // If phone accuracy is ±80m, a "stationary" reading can be 80m off
-            const stopThreshold = Math.max(STOP_MOVEMENT_METERS, loc.accuracy * 1.5);
-            if (dist < stopThreshold) {
-                if (!stopStartTime) stopStartTime = now;   // start stop timer
+            if (dist < STOP_MOVEMENT_METERS) {
+                if (!stopStartTime) stopStartTime = now;
                 else if (now - stopStartTime >= STOP_MIN_SECONDS * 1000) {
                     await queueForSync({
                         startTime: stopStartTime, endTime: null,
@@ -275,7 +286,6 @@
                     stopStartTime = null;
                 }
             } else {
-                // Driver moved — close any open stop
                 if (stopStartTime) {
                     await queueForSync({
                         startTime: stopStartTime, endTime: now,
@@ -284,16 +294,6 @@
                     }, "stop");
                     stopStartTime = null;
                 }
-            }
-
-            // Early return if barely moved — no need to update route
-            if (dist < MIN_DISTANCE_METERS) {
-                if (isOnline && (now - lastPushTime) >= MIN_TIME_MS) {
-                    await pushLiveLocation(loc);
-                    lastPushTime = now;
-                } else if (!isOnline) await queueForSync(loc, "location");
-                updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
-                return;
             }
         }
         lastPosition = { lat: loc.lat, lng: loc.lng, timestamp: now };
@@ -312,34 +312,14 @@
         document.getElementById("accuracy").innerHTML = "check permissions & https";
     }
 
-    let stopCheckId = null;
-
     function startTracking() {
         if (watchId) navigator.geolocation.clearWatch(watchId);
         watchId = navigator.geolocation.watchPosition(saveLocation, gpsError, {
             enableHighAccuracy: true, maximumAge: 0, timeout: 10000
         });
-
-        // Independent stop checker — runs every 15s regardless of GPS update frequency
-        // Fixes the bug where stationary phones reduce GPS event frequency
-        if (stopCheckId) clearInterval(stopCheckId);
-        stopCheckId = setInterval(async () => {
-            if (!trackingEnabled || !lastPosition || !stopStartTime) return;
-            const now = Date.now();
-            if (now - stopStartTime >= STOP_MIN_SECONDS * 1000) {
-                await queueForSync({
-                    startTime: stopStartTime, endTime: null,
-                    location: { lat: lastPosition.lat, lng: lastPosition.lng },
-                    driver: DRIVER_ID
-                }, "stop");
-                stopStartTime = null;
-            }
-        }, 15000);
     }
-
     function stopTracking() {
         if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-        if (stopCheckId) { clearInterval(stopCheckId); stopCheckId = null; }
     }
 
     const controlRef = ref(db, `drivers/${DRIVER_ID}/controls/tracking_enabled`);
@@ -358,7 +338,7 @@
         }
     });
 
-    window.addEventListener("online", () => { isOnline = true; processSyncQueue(); });
+    // online/offline handled in SW section below
     window.addEventListener("offline", () => { isOnline = false; });
 
     let wakeLock = null;
@@ -370,6 +350,32 @@
             });
         } catch(e) {}
     }
+
+
+    // ── Service Worker registration ───────────────────────────────────
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+            .then(reg => console.log('SW registered'))
+            .catch(err => console.log('SW failed:', err));
+    }
+
+    // ── Keep-alive ping every 20s to prevent browser from suspending ──
+    setInterval(() => {
+        if (navigator.serviceWorker.controller) {
+            const ch = new MessageChannel();
+            navigator.serviceWorker.controller.postMessage('PING', [ch.port2]);
+        }
+    }, 20000);
+
+    // ── Background sync registration when back online ─────────────────
+    window.addEventListener('online', async () => {
+        isOnline = true;
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            const reg = await navigator.serviceWorker.ready;
+            reg.sync.register('sync-locations').catch(() => {});
+        }
+        processSyncQueue();
+    });
 
     (async () => {
         await loadQueue();
