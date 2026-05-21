@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Fleet</title>
-    <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a73e8">
     <meta name="mobile-web-app-capable" content="yes">
@@ -14,61 +13,36 @@
     <link rel="apple-touch-icon" href="icon-192.svg">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: -apple-system, 'Segoe UI', sans-serif;
-            background: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            background: #f5f5f5; min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 20px;
         }
-
-        /* ── looks like a standard maps/navigation app ── */
         .app-header {
-            display: flex; align-items: center; gap: 10px;
-            margin-bottom: 28px;
+            display: flex; align-items: center; gap: 10px; margin-bottom: 28px;
         }
         .app-icon {
-            width: 44px; height: 44px; border-radius: 10px;
-            background: #1a73e8;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
+            width: 44px; height: 44px; border-radius: 10px; background: #1a73e8;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
         }
         .app-name { font-size: 1.3rem; font-weight: 600; color: #202124; }
         .app-sub  { font-size: 0.72rem; color: #9aa0a6; }
-
-        /* ── main card ── */
         .card {
-            width: 100%; max-width: 360px;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 2px 16px rgba(0,0,0,0.1);
-            overflow: hidden;
+            width: 100%; max-width: 360px; background: #fff;
+            border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.1); overflow: hidden;
         }
-
-        /* ── GPS status row ── */
         .gps-row {
-            background: #1a73e8;
-            padding: 20px;
-            color: #fff;
-            text-align: center;
+            background: #1a73e8; padding: 20px; color: #fff; text-align: center;
         }
         .gps-label {
             font-size: 0.72rem; opacity: 0.8; margin-bottom: 6px;
             text-transform: uppercase; letter-spacing: 0.08em;
         }
         .gps-coords {
-            font-size: 1rem; font-weight: 500; font-family: monospace;
-            word-break: break-word;
+            font-size: 1rem; font-weight: 500; font-family: monospace; word-break: break-word;
         }
-        .gps-accuracy {
-            font-size: 0.7rem; opacity: 0.7; margin-top: 6px;
-        }
-
-        /* ── status items ── */
+        .gps-accuracy { font-size: 0.7rem; opacity: 0.7; margin-top: 6px; }
         .status-list { padding: 4px 0; }
         .status-item {
             display: flex; align-items: center; justify-content: space-between;
@@ -80,23 +54,15 @@
         .status-label { font-size: 0.85rem; color: #202124; }
         .status-sub   { font-size: 0.7rem; color: #9aa0a6; margin-top: 2px; }
         .status-badge {
-            font-size: 0.7rem; padding: 3px 10px; border-radius: 12px;
-            font-weight: 500;
+            font-size: 0.7rem; padding: 3px 10px; border-radius: 12px; font-weight: 500;
         }
         .badge-green { background: #e8f5e9; color: #2e7d32; }
         .badge-grey  { background: #f1f3f4; color: #9aa0a6; }
         .badge-blue  { background: #e8f0fe; color: #1a73e8; }
-
-        /* ── footer ── */
         .card-footer {
-            padding: 12px 18px;
-            background: #f8f9fa;
-            font-size: 0.68rem;
-            color: #9aa0a6;
-            text-align: center;
+            padding: 12px 18px; background: #f8f9fa;
+            font-size: 0.68rem; color: #9aa0a6; text-align: center;
         }
-
-        /* ── battery optimization prompt ── */
         .toast {
             position: fixed; bottom: 24px; left: 50%;
             transform: translateX(-50%);
@@ -105,9 +71,7 @@
             font-size: 0.78rem; max-width: 300px; text-align: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             display: none; z-index: 100;
-            animation: slideUp 0.3s ease;
         }
-        @keyframes slideUp { from{transform:translateX(-50%) translateY(20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
     </style>
 </head>
 <body>
@@ -126,7 +90,6 @@
         <div class="gps-coords" id="coords">Acquiring GPS signal...</div>
         <div class="gps-accuracy" id="accuracy"></div>
     </div>
-
     <div class="status-list">
         <div class="status-item">
             <div class="status-left">
@@ -138,7 +101,6 @@
             </div>
             <div class="status-badge" id="netBadge">--</div>
         </div>
-
         <div class="status-item">
             <div class="status-left">
                 <div class="status-icon">🛰️</div>
@@ -149,7 +111,6 @@
             </div>
             <div class="status-badge badge-blue">Active</div>
         </div>
-
         <div class="status-item">
             <div class="status-left">
                 <div class="status-icon">🔄</div>
@@ -160,7 +121,6 @@
             </div>
             <div class="status-badge badge-green" id="syncBadge">Synced</div>
         </div>
-
         <div class="status-item">
             <div class="status-left">
                 <div class="status-icon">🔋</div>
@@ -172,371 +132,376 @@
             <div class="status-badge badge-green" id="bgBadge">On</div>
         </div>
     </div>
-
-    <div class="card-footer" id="footerMsg">
-        GPS · Background sync enabled
-    </div>
+    <div class="card-footer">GPS · High accuracy · Background sync enabled</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
-    import localforage from "https://cdn.skypack.dev/localforage";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-database.js";
+import localforage from "https://cdn.skypack.dev/localforage";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyABCAAh8pr_UEy5y1dXsUlmB_VZFv1loFI",
-        authDomain: "delivery-tracking-8a23d.firebaseapp.com",
-        databaseURL: "https://delivery-tracking-8a23d-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "delivery-tracking-8a23d",
-        storageBucket: "delivery-tracking-8a23d.firebasestorage.app",
-        messagingSenderId: "466542316831",
-        appId: "1:466542316831:web:c8922c1fbf92db23fe342a"
+// ── Firebase ──────────────────────────────────────────────────────────
+const db = getDatabase(initializeApp({
+    apiKey: "AIzaSyABCAAh8pr_UEy5y1dXsUlmB_VZFv1loFI",
+    authDomain: "delivery-tracking-8a23d.firebaseapp.com",
+    databaseURL: "https://delivery-tracking-8a23d-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "delivery-tracking-8a23d",
+    storageBucket: "delivery-tracking-8a23d.firebasestorage.app",
+    messagingSenderId: "466542316831",
+    appId: "1:466542316831:web:c8922c1fbf92db23fe342a"
+}));
+
+const DRIVER_ID = "driver1";  // ← change per vehicle
+
+// ── Constants ─────────────────────────────────────────────────────────
+const STOP_RADIUS_M    = 60;    // metres — within this = stopped
+const STOP_MIN_SECS    = 120;   // seconds before a stop is recorded
+const MOVE_CONFIRM     = 3;     // consecutive moving readings to confirm movement
+const MIN_ROUTE_M      = 15;    // minimum metres between route points
+const MAX_ACCURACY_M   = 80;    // ignore GPS readings worse than this
+const PUSH_INTERVAL_MS = 5000;  // minimum ms between Firebase pushes
+const POLL_INTERVAL_MS = 15000; // how often to force a GPS reading
+
+// ── State ─────────────────────────────────────────────────────────────
+let isOnline       = navigator.onLine;
+let trackingEnabled = true;
+let lastPosition   = null;   // { lat, lng, timestamp }
+let lastPushTime   = 0;
+let watchId        = null;
+let pollId         = null;
+let syncQueue      = [];
+let moveCount      = 0;      // consecutive moving readings
+
+// ── Stop state machine ────────────────────────────────────────────────
+// ONE object controls all stop logic. Only one code path can push a stop.
+const stop = {
+    active:   false,   // currently in a stop?
+    startTime: null,
+    lat:       null,
+    lng:       null,
+    pushed:    false,  // has the ongoing stop been pushed to Firebase?
+    pushing:   false,  // guard against simultaneous pushes
+
+    // Call when driver is stationary
+    onStationary(lat, lng, now) {
+        moveCount = 0;
+        if(!this.active){
+            // New stop starting
+            this.active    = true;
+            this.startTime = now;
+            this.lat       = lat;
+            this.lng       = lng;
+            this.pushed    = false;
+        }
+    },
+
+    // Call when driver is moving
+    async onMoving(now) {
+        moveCount++;
+        if(moveCount < MOVE_CONFIRM) return;  // not confirmed yet
+
+        // Confirmed movement
+        if(this.active && this.pushed){
+            // Close the ongoing stop with an endTime
+            await pushStop({
+                startTime: this.startTime,
+                endTime:   now,
+                location:  { lat: this.lat, lng: this.lng },
+                driver:    DRIVER_ID
+            });
+        }
+        this.reset();
+        moveCount = 0;
+    },
+
+    // Called by timer every 15s — pushes stop if threshold reached
+    async checkTimer(now) {
+        if(!this.active || this.pushing) return;
+        if(now - this.startTime >= STOP_MIN_SECS * 1000 && !this.pushed){
+            this.pushing = true;
+            await pushStop({
+                startTime: this.startTime,
+                endTime:   null,            // ongoing — no end time yet
+                location:  { lat: this.lat, lng: this.lng },
+                driver:    DRIVER_ID
+            });
+            this.pushed  = true;
+            this.pushing = false;
+        }
+    },
+
+    reset() {
+        this.active    = false;
+        this.startTime = null;
+        this.lat       = null;
+        this.lng       = null;
+        this.pushed    = false;
+        this.pushing   = false;
+    }
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function haversine(lat1,lon1,lat2,lon2){
+    const R=6371e3, p1=lat1*Math.PI/180, p2=lat2*Math.PI/180;
+    const dp=(lat2-lat1)*Math.PI/180, dl=(lon2-lon1)*Math.PI/180;
+    const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function updateUI(lat, lng, accuracy, timestamp, queueSize){
+    if(lat && lng)
+        document.getElementById('coords').innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    if(accuracy !== null)
+        document.getElementById('accuracy').innerText = `±${Math.round(accuracy)}m accuracy`;
+    if(timestamp)
+        document.getElementById('lastUpdate').innerText = new Date(timestamp).toLocaleTimeString();
+
+    const netBadge  = document.getElementById('netBadge');
+    const netSub    = document.getElementById('netSub');
+    const syncBadge = document.getElementById('syncBadge');
+
+    if(isOnline){
+        netBadge.className = 'status-badge badge-green';
+        netBadge.innerText = 'Online';
+        netSub.innerText   = 'Connected';
+    } else {
+        netBadge.className = 'status-badge badge-grey';
+        netBadge.innerText = 'Offline';
+        netSub.innerText   = `${queueSize} point${queueSize!==1?'s':''} queued`;
+    }
+
+    syncBadge.className = queueSize > 0 ? 'status-badge badge-blue' : 'status-badge badge-green';
+    syncBadge.innerText = queueSize > 0 ? 'Syncing...' : 'Synced';
+}
+
+// ── Firebase push functions ───────────────────────────────────────────
+async function pushLive(loc){
+    await set(ref(db, `drivers/${DRIVER_ID}/live`), {
+        latitude:  loc.lat,
+        longitude: loc.lng,
+        time:      loc.readableTime,
+        timestamp: loc.timestamp,
+        accuracy:  loc.accuracy
+    });
+}
+
+async function appendRoute(loc){
+    const r    = ref(db, `drivers/${DRIVER_ID}/route`);
+    const snap = await get(r);
+    let route  = snap.val() || [];
+    route.push({ lat:loc.lat, lng:loc.lng, time:loc.readableTime, timestamp:loc.timestamp });
+    if(route.length > 2000) route = route.slice(-2000);
+    await set(r, route);
+}
+
+async function pushStop(stopData){
+    const r    = ref(db, `drivers/${DRIVER_ID}/stops`);
+    const snap = await get(r);
+    let stops  = snap.val() || [];
+    stops.push(stopData);
+    if(stops.length > 500) stops = stops.slice(-500);
+    await set(r, stops);
+}
+
+// ── Offline queue ─────────────────────────────────────────────────────
+async function queue(data, type="location"){
+    syncQueue.push({ type, data, ts: Date.now() });
+    await localforage.setItem("sq", syncQueue);
+    if(type === "location")
+        updateUI(data.lat, data.lng, data.accuracy, data.timestamp, syncQueue.length);
+    if(isOnline) flush();
+}
+
+async function flush(){
+    if(!isOnline || syncQueue.length === 0) return;
+    const done = [];
+    for(let i=0; i<syncQueue.length; i++){
+        try {
+            const item = syncQueue[i];
+            if(item.type === "location"){
+                await pushLive(item.data);
+                await appendRoute(item.data);
+            } else if(item.type === "stop"){
+                await pushStop(item.data);
+            }
+            done.push(i);
+        } catch(e){ break; }
+    }
+    for(let i=done.length-1; i>=0; i--) syncQueue.splice(done[i],1);
+    await localforage.setItem("sq", syncQueue);
+    if(syncQueue.length > 0) setTimeout(flush, 5000);
+    updateUI(null, null, null, null, syncQueue.length);
+}
+
+// ── Core position handler ─────────────────────────────────────────────
+async function onPosition(position){
+    if(!trackingEnabled) return;
+
+    const now = Date.now();
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    const acc = position.coords.accuracy;
+
+    // Reject poor accuracy readings
+    if(acc > MAX_ACCURACY_M) return;
+
+    const loc = {
+        lat, lng, accuracy: acc, timestamp: now,
+        readableTime: new Date().toLocaleString("en-NG", { timeZone:"Africa/Lagos" })
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getDatabase(app);
-    const DRIVER_ID = "driver1";  // change per vehicle
+    updateUI(lat, lng, acc, now, syncQueue.length);
 
-    // ── State ─────────────────────────────────────────────────────────
-    let syncQueue      = [];
-    let isOnline       = navigator.onLine;
-    let lastPosition   = null;
-    let stopStartTime  = null;
-    let lastPushTime   = 0;
-    let watchId        = null;
-    let stopCheckId    = null;
-    let trackingEnabled = true;
-    let movingCount    = 0;  // consecutive "moving" readings counter
-
-    // ── Constants ─────────────────────────────────────────────────────
-    const STOP_MOVEMENT_METERS = 60;
-    const STOP_MIN_SECONDS     = 120;
-    const MOVING_CONFIRM       = 3;   // need 3 consecutive moving readings before ending stop
-    const MIN_TIME_MS          = 5000;
-    const MIN_DISTANCE_METERS  = 10;
-
-    // ── Helpers ───────────────────────────────────────────────────────
-    function distance(lat1,lon1,lat2,lon2){
-        const R=6371e3, φ1=lat1*Math.PI/180, φ2=lat2*Math.PI/180;
-        const Δφ=(lat2-lat1)*Math.PI/180, Δλ=(lon2-lon1)*Math.PI/180;
-        const a=Math.sin(Δφ/2)**2+Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
-        return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-    }
-
-    function showToast(msg, duration=5000){
-        const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.style.display = 'block';
-        setTimeout(() => t.style.display='none', duration);
-    }
-
-    // ── UI update — no sync button, all automatic ─────────────────────
-    function updateUI(lat, lng, accuracy, timestamp, queueSize){
-        if(lat && lng)
-            document.getElementById('coords').innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        if(accuracy)
-            document.getElementById('accuracy').innerText = `±${Math.round(accuracy)}m accuracy`;
-        if(timestamp)
-            document.getElementById('lastUpdate').innerText = new Date(timestamp).toLocaleTimeString();
-
-        const netBadge = document.getElementById('netBadge');
-        const netSub   = document.getElementById('netSub');
-        const syncBadge = document.getElementById('syncBadge');
-
+    // First reading
+    if(!lastPosition){
+        lastPosition = { lat, lng, timestamp: now };
+        stop.onStationary(lat, lng, now);   // assume stopped until proven moving
         if(isOnline){
-            netBadge.className = 'status-badge badge-green';
-            netBadge.innerText = 'Online';
-            netSub.innerText   = 'Connected';
-        } else {
-            netBadge.className = 'status-badge badge-grey';
-            netBadge.innerText = 'Offline';
-            netSub.innerText   = `${queueSize} points queued`;
-        }
-
-        // Show syncing state briefly then go back to synced
-        if(queueSize > 0){
-            syncBadge.className = 'status-badge badge-blue';
-            syncBadge.innerText = 'Syncing...';
-        } else {
-            syncBadge.className = 'status-badge badge-green';
-            syncBadge.innerText = 'Synced';
-        }
-    }
-
-    // ── Firebase push ─────────────────────────────────────────────────
-    async function pushLiveLocation(loc){
-        await set(ref(db, `drivers/${DRIVER_ID}/live`), {
-            latitude: loc.lat, longitude: loc.lng,
-            time: loc.readableTime, timestamp: loc.timestamp, accuracy: loc.accuracy
-        });
-    }
-    async function appendToRoute(loc){
-        const routeRef = ref(db, `drivers/${DRIVER_ID}/route`);
-        const snap = await get(routeRef);
-        let route = snap.val() || [];
-        route.push({ lat:loc.lat, lng:loc.lng, time:loc.readableTime, timestamp:loc.timestamp });
-        if(route.length > 2000) route = route.slice(-2000);
-        await set(routeRef, route);
-    }
-    async function pushStopEvent(stop){
-        const stopsRef = ref(db, `drivers/${DRIVER_ID}/stops`);
-        const snap = await get(stopsRef);
-        let stops = snap.val() || [];
-        stops.push(stop);
-        if(stops.length > 500) stops = stops.slice(-500);
-        await set(stopsRef, stops);
-    }
-
-    // ── Offline queue (silent, automatic) ─────────────────────────────
-    async function queueForSync(data, type="location"){
-        syncQueue.push({ type, data, ts:Date.now() });
-        await localforage.setItem("syncQueue", syncQueue);
-        if(type === "location")
-            updateUI(data.lat, data.lng, data.accuracy, data.timestamp, syncQueue.length);
-        if(isOnline) processSyncQueue();
-    }
-
-    async function processSyncQueue(){
-        if(!isOnline || syncQueue.length===0) return;
-        let success = [];
-        for(let i=0; i<syncQueue.length; i++){
-            try {
-                if(syncQueue[i].type === "location"){
-                    await pushLiveLocation(syncQueue[i].data);
-                    await appendToRoute(syncQueue[i].data);
-                } else if(syncQueue[i].type === "stop"){
-                    await pushStopEvent(syncQueue[i].data);
-                }
-                success.push(i);
-            } catch(e){ break; }
-        }
-        for(let i=success.length-1; i>=0; i--) syncQueue.splice(success[i],1);
-        await localforage.setItem("syncQueue", syncQueue);
-        if(syncQueue.length > 0) setTimeout(processSyncQueue, 5000);
-        updateUI(null, null, null, Date.now(), syncQueue.length);
-    }
-
-    async function loadQueue(){
-        const stored = await localforage.getItem("syncQueue");
-        if(stored) syncQueue.push(...stored);
-        processSyncQueue();
-    }
-
-    // ── Core location processor — used by both watchPosition and polls ──
-    async function processPosition(position){
-        if(!trackingEnabled) return;
-        const now = Date.now();
-        const loc = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            timestamp: now,
-            readableTime: new Date().toLocaleString("en-NG", { timeZone:"Africa/Lagos" }),
-            accuracy: position.coords.accuracy
-        };
-
-        if(!lastPosition){
-            // First reading — just save position and start stop timer
-            lastPosition = { lat:loc.lat, lng:loc.lng, timestamp:now };
-            stopStartTime = now;   // assume stopped until proven moving
-            if(isOnline && (now - lastPushTime) >= MIN_TIME_MS){
-                await pushLiveLocation(loc);
-                await appendToRoute(loc);
-                lastPushTime = now;
-            } else {
-                await queueForSync(loc, "location");
-            }
-            updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
-            return;
-        }
-
-        const dist = distance(lastPosition.lat, lastPosition.lng, loc.lat, loc.lng);
-        const stopThreshold = Math.max(STOP_MOVEMENT_METERS, loc.accuracy * 1.5);
-
-        if(dist < stopThreshold){
-            // Still in stop zone
-            movingCount = 0;
-            if(!stopStartTime) stopStartTime = now;
-            // Don't push stop here — let the independent checker do it
-            // so GPS slow-down doesn't prevent detection
-
-            // Update live position and footer UI
-            if(isOnline && (now - lastPushTime) >= MIN_TIME_MS){
-                await pushLiveLocation(loc);
-                lastPushTime = now;
-            } else if(!isOnline) await queueForSync(loc, "location");
-            updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
-            return;
-        }
-
-        // Possible movement
-        movingCount++;
-        if(movingCount >= MOVING_CONFIRM){
-            // Real movement confirmed
-            if(stopStartTime){
-                await queueForSync({
-                    startTime: stopStartTime, endTime: now,
-                    location: { lat:lastPosition.lat, lng:lastPosition.lng },
-                    driver: DRIVER_ID
-                }, "stop");
-                stopStartTime = null;
-            }
-            movingCount = 0;
-            // Update lastPosition only when actually moving
-            lastPosition = { lat:loc.lat, lng:loc.lng, timestamp:now };
-        }
-
-        if(isOnline && (now - lastPushTime) >= MIN_TIME_MS){
-            await pushLiveLocation(loc);
-            await appendToRoute(loc);
+            await pushLive(loc);
+            await appendRoute(loc);
             lastPushTime = now;
+        } else await queue(loc, "location");
+        return;
+    }
+
+    const dist      = haversine(lastPosition.lat, lastPosition.lng, lat, lng);
+    const threshold = Math.max(STOP_RADIUS_M, acc * 1.5);
+
+    if(dist < threshold){
+        // ── STATIONARY ──
+        stop.onStationary(lat, lng, now);
+
+        // Push live position but skip route (not moving)
+        if(isOnline && now - lastPushTime >= PUSH_INTERVAL_MS){
+            await pushLive(loc);
+            lastPushTime = now;
+        } else if(!isOnline) await queue(loc, "location");
+
+    } else {
+        // ── MOVING ──
+        await stop.onMoving(now);
+
+        // Only add route point if moved enough AND accuracy is good
+        if(dist >= MIN_ROUTE_M){
+            lastPosition = { lat, lng, timestamp: now };
+            if(isOnline && now - lastPushTime >= PUSH_INTERVAL_MS){
+                await pushLive(loc);
+                await appendRoute(loc);
+                lastPushTime = now;
+            } else await queue(loc, "location");
         } else {
-            await queueForSync(loc, "location");
+            // Moved a little but not enough for a route point
+            if(isOnline && now - lastPushTime >= PUSH_INTERVAL_MS){
+                await pushLive(loc);
+                lastPushTime = now;
+            }
         }
-        updateUI(loc.lat, loc.lng, loc.accuracy, now, syncQueue.length);
     }
+}
 
-    // watchPosition callback
-    async function saveLocation(position){ await processPosition(position); }
+function onGPSError(err){
+    document.getElementById('coords').innerText = 'Searching for GPS signal...';
+    document.getElementById('accuracy').innerText = 'Move to open area for better signal';
+}
 
-    function gpsError(err){
-        document.getElementById('coords').innerText = 'Searching for GPS signal...';
-        document.getElementById('accuracy').innerText = 'Move to open area for better signal';
-    }
+// ── Tracking control ──────────────────────────────────────────────────
+function startTracking(){
+    // watchPosition for continuous updates
+    if(watchId) navigator.geolocation.clearWatch(watchId);
+    watchId = navigator.geolocation.watchPosition(onPosition, onGPSError, {
+        enableHighAccuracy: true, maximumAge: 0, timeout: 15000
+    });
 
-    // ── Start / stop tracking ─────────────────────────────────────────
-    function startTracking(){
+    // Independent poll every 15s — forces GPS even when watchPosition slows
+    if(pollId) clearInterval(pollId);
+    pollId = setInterval(() => {
+        if(!trackingEnabled) return;
+        navigator.geolocation.getCurrentPosition(
+            pos => onPosition(pos),
+            ()  => stop.checkTimer(Date.now()),  // GPS failed — still check timer
+            { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 }
+        );
+        // Always check stop timer regardless of GPS result
+        stop.checkTimer(Date.now());
+    }, POLL_INTERVAL_MS);
+
+    document.getElementById('bgBadge').innerText  = 'On';
+    document.getElementById('bgBadge').className  = 'status-badge badge-green';
+}
+
+function stopTracking(){
+    if(watchId){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+    if(pollId) { clearInterval(pollId); pollId=null; }
+    document.getElementById('coords').innerText  = 'Standby mode';
+    document.getElementById('bgBadge').innerText = 'Standby';
+    document.getElementById('bgBadge').className = 'status-badge badge-grey';
+}
+
+// ── Manager remote control ────────────────────────────────────────────
+onValue(ref(db, `drivers/${DRIVER_ID}/controls/tracking_enabled`), snap => {
+    const enabled = snap.val();
+    trackingEnabled = enabled !== false;
+    if(trackingEnabled) startTracking();
+    else stopTracking();
+});
+
+// ── Visibility — restart GPS when app comes to foreground ─────────────
+document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && trackingEnabled){
         if(watchId) navigator.geolocation.clearWatch(watchId);
-        watchId = navigator.geolocation.watchPosition(saveLocation, gpsError, {
+        watchId = navigator.geolocation.watchPosition(onPosition, onGPSError, {
             enableHighAccuracy: true, maximumAge: 0, timeout: 15000
         });
-        document.getElementById('bgBadge').innerText = 'On';
-        document.getElementById('bgBadge').className = 'status-badge badge-green';
-
-        // Independent stop checker — fires every 15s regardless of GPS frequency
-        // Also polls GPS directly so stop detection works even when watchPosition slows
-        if(stopCheckId) clearInterval(stopCheckId);
-        stopCheckId = setInterval(async () => {
-            if(!trackingEnabled) return;
-
-            // Force a fresh GPS reading so we have current position
-            navigator.geolocation.getCurrentPosition(
-                async pos => {
-                    await processPosition(pos);
-
-                    // After processing, check if stop threshold reached
-                    if(!stopStartTime) return;
-                    const now = Date.now();
-                    if(now - stopStartTime >= STOP_MIN_SECONDS * 1000){
-                        await queueForSync({
-                            startTime: stopStartTime, endTime: null,
-                            location: { lat:lastPosition.lat, lng:lastPosition.lng },
-                            driver: DRIVER_ID
-                        }, "stop");
-                        stopStartTime = null;
-                    }
-                },
-                () => {
-                    // GPS failed — still check timer with last known position
-                    if(!lastPosition || !stopStartTime) return;
-                    const now = Date.now();
-                    if(now - stopStartTime >= STOP_MIN_SECONDS * 1000){
-                        queueForSync({
-                            startTime: stopStartTime, endTime: null,
-                            location: { lat:lastPosition.lat, lng:lastPosition.lng },
-                            driver: DRIVER_ID
-                        }, "stop").then(() => { stopStartTime = null; });
-                    }
-                },
-                { enableHighAccuracy:true, maximumAge:30000, timeout:10000 }
-            );
-        }, 15000);
-
-        // GPS keep-alive — forces position update every 30s when screen is off
-        setInterval(() => {
-            if(trackingEnabled && document.hidden){
-                navigator.geolocation.getCurrentPosition(
-                    pos => saveLocation(pos),
-                    () => {},
-                    { enableHighAccuracy:true, maximumAge:30000, timeout:15000 }
-                );
-            }
-        }, 30000);
     }
+});
 
-    function stopTracking(){
-        if(watchId){ navigator.geolocation.clearWatch(watchId); watchId=null; }
-        if(stopCheckId){ clearInterval(stopCheckId); stopCheckId=null; }
-        document.getElementById('coords').innerText = 'Standby mode';
-        document.getElementById('bgBadge').innerText = 'Standby';
-        document.getElementById('bgBadge').className = 'status-badge badge-grey';
-    }
+// ── Network ───────────────────────────────────────────────────────────
+window.addEventListener('online',  () => { isOnline=true;  flush(); });
+window.addEventListener('offline', () => { isOnline=false; });
 
-    // ── Visibility change — restart GPS when app comes to foreground ──
-    document.addEventListener('visibilitychange', () => {
-        if(!document.hidden && trackingEnabled){
-            if(watchId) navigator.geolocation.clearWatch(watchId);
-            watchId = navigator.geolocation.watchPosition(saveLocation, gpsError, {
-                enableHighAccuracy: true, maximumAge: 0, timeout: 15000
-            });
-        }
-    });
+// ── Service worker ────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js', { scope:'./' })
+        .then(() => {})
+        .catch(() => {});
+}
 
-    // ── Manager control ───────────────────────────────────────────────
+// ── Wake lock ─────────────────────────────────────────────────────────
+async function keepAwake(){
+    try {
+        await navigator.wakeLock.request("screen");
+        document.addEventListener('visibilitychange', async () => {
+            if(!document.hidden)
+                await navigator.wakeLock.request("screen").catch(()=>{});
+        });
+    } catch(e){}
+}
+
+// ── Battery tip (looks like a navigation app tip) ─────────────────────
+function batteryTip(){
+    setTimeout(() => {
+        const t = document.getElementById('toast');
+        t.innerText = '💡 For best accuracy: Settings → Apps → Fleet → Battery → Unrestricted';
+        t.style.display = 'block';
+        setTimeout(() => t.style.display='none', 8000);
+    }, 15000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+(async () => {
+    const stored = await localforage.getItem("sq");
+    if(stored) syncQueue.push(...stored);
+
     const controlRef = ref(db, `drivers/${DRIVER_ID}/controls/tracking_enabled`);
-    onValue(controlRef, snap => {
-        const enabled = snap.val();
-        if(enabled === false){
-            trackingEnabled = false;
-            stopTracking();
-        } else {
-            trackingEnabled = true;
-            startTracking();
-        }
-    });
+    const init = await get(controlRef);
+    if(init.val() === null) await set(controlRef, true);
 
-    // ── Network events ────────────────────────────────────────────────
-    window.addEventListener('online',  () => { isOnline=true;  processSyncQueue(); });
-    window.addEventListener('offline', () => { isOnline=false; });
-
-    // ── Service worker ────────────────────────────────────────────────
-    if('serviceWorker' in navigator){
-        navigator.serviceWorker.register('./sw.js', { scope:'./' })
-            .then(reg => {
-                navigator.serviceWorker.addEventListener('message', e => {
-                    if(e.data?.type === 'SYNC_NOW') processSyncQueue();
-                });
-            })
-            .catch(()=>{});
-    }
-
-    // ── Wake lock ─────────────────────────────────────────────────────
-    async function keepAwake(){
-        try {
-            await navigator.wakeLock.request("screen");
-            document.addEventListener('visibilitychange', async () => {
-                if(!document.hidden)
-                    await navigator.wakeLock.request("screen").catch(()=>{});
-            });
-        } catch(e){}
-    }
-
-    // ── Battery optimization toast (looks like a maps app tip) ────────
-    function showBatteryTip(){
-        setTimeout(() => {
-            showToast('💡 For best navigation accuracy, go to Settings → Apps → Fleet → Battery → Unrestricted', 8000);
-        }, 12000);
-    }
-
-    // ── Init ──────────────────────────────────────────────────────────
-    (async () => {
-        await loadQueue();
-        const init = await get(controlRef);
-        if(init.val() === null) await set(controlRef, true);
-        keepAwake();
-        showBatteryTip();
-    })();
+    await keepAwake();
+    batteryTip();
+    flush();
+})();
 </script>
 </body>
 </html>
